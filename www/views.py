@@ -24,38 +24,44 @@ def estado(request):
     message = jData['commit']
     return HttpResponse('última actualización: ' + message['message'] + ' / ' + message['committer']['date'])
 
+cache = defaultdict()
+
 def refresh(request):
-    entrevistados = {}
-    preguntas = {}
+   
     respuestas = []
-    req = requests.get('https://lopezobrador.org.mx/secciones/version-estenografica/')
-    response = ''
-    pq = PyQuery(req.text)
-    for elem in pq('p'):
-        if elem is not None and elem.text is not None:
-            print(elem)
-            matchS = re.match(r'strong', elem.text, re.RegexFlag.IGNORECASE) 
-            if matchS:            
-                if "PREGUNTA" not in elem.text:
-                    matchE = re.match(r'strong.(.+)./strong.(.*)', elem.text, re.RegexFlag.I | re.RegexFlag.M)
-                    entrevistado = matchE.group(1)
-                    respuestas.insert(matchE.group(2))
-                    if entrevistado is not None and not entrevistado in entrevistados:
-                        entrevistados[entrevistado] = 1
-                    elif entrevistado is not None: 
-                        entrevistados[entrevistado] += 1
-                else:
-                    pregunta = elem.text.replace('<strong>PREGUNTA:</strong>','')
+    text = ''
+    if 'text' in cache:
+        text = cache['text']
+        print('using cache')
+    else:
+        req = requests.get('https://lopezobrador.org.mx/secciones/version-estenografica/')
+        text = req.text
+        cache['text'] = text
+
+    veCodes = re.findall(r'VE-\d+-?\d*', text, re.RegexFlag.M)
+    veText = re.split(r'<p>\s*<?s?t?r?o?n?g?>?VE-\d+-?\d*', text)
+    response ='<table><tr><td>code</td><td>preguntas</td><td>actores</td><td>nombres</td></tr>'
+    for i, ve in enumerate(veText):
+        entrevistados = {}
+        preguntas = {}
+        ve = veCodes[i+1]
+        response+='<tr><td>'+ve +'</td><td>'
+        text = veText[i]
+        pq = PyQuery(text)
+        for elem in pq('p > strong'):
+            if elem is not None and elem.text is not None:
+                if "PREGUNTA" in elem.text:
+                    pregunta = 'pregunta'
                     if not pregunta in preguntas:
                         preguntas[pregunta] = 1
                     else: 
-                        preguntas[pregunta] += 1
-    
-    response = '<strong>ENTREVISTADOS</strong>'
-    for entrevistado in entrevistados.keys():
-        response += entrevistado + ': ' +  str(entrevistados[entrevistado]) + ' apariciones.' + '<br />'
-    response += ' <strong> PREGUNTAS </strong>'
-    for pregunta in preguntas.keys():
-        response += pregunta.replace(':', '') + '<br />'
-
+                        preguntas[pregunta] += 1            
+                elif 'fica' not in elem.text and len(re.findall(r'[a-z]{3}', elem.text)) == 0:
+                    entrevistado = elem.text
+                    if not entrevistado in entrevistados:
+                        entrevistados[entrevistado] = 1
+                    else: 
+                        entrevistados[entrevistado] += 1
+        response += str(len(preguntas))+'</td><td>' + str(len(entrevistados)) + '</td></td><td>' + str(entrevistados.keys()).replace('dict_keys([','').replace('\\n',' ').replace('\'','').replace('])','')+'</td></tr>'
+    response+='</table>'
     return HttpResponse(response)
