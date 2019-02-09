@@ -4,6 +4,7 @@ from datetime import datetime
 from pymongo import MongoClient
 from pyquery import PyQuery
 from collections import defaultdict
+from pymongo import MongoClient
 
 import os
 import requests
