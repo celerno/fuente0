@@ -6,6 +6,12 @@ Fuente0 (fuente cero) es un proyecto personal sin fines de lucro con la intenci�
 
 La idea principal de documentar esto es categorizar qué respuestas da el presidente a qué tipo de preguntas y todos sus derivados:
 
+#### palabras del día
+- tema tendencia en redes
+- relación con: iniciativas, propuestas de ley, dichos
+- desmentidos / discusión  de noticias
+
+#### contenido general
 - Categorías de preguntas
 - Categoría más respondida correctamente
 - Categoría menos respondida
